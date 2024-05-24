@@ -1,6 +1,7 @@
 var config = require('../dbConfig');
 const sql = require('mssql')
 const ResponseHandler = require ('../Others/ResponseHandler')
+const HelperFunctions = require ('../Others/HelperFunctions')
 
 async function getComment(ID) {
     try {
@@ -11,11 +12,12 @@ async function getComment(ID) {
         if (!comment.recordsets || !comment.recordsets[0][0]?.ID) {
             return ResponseHandler(404, 'Eroare: ', null, 'Comentariul nu a fost găsit.')
         }
-        return ResponseHandler(200, null, comment.recordsets, null)
+        return ResponseHandler(200, null, HelperFunctions.transformKeysToLowercase(comment.recordsets), null)
     } catch (error) {
         return ResponseHandler(500, 'Eroare server: ', null, error.message)
     }
 }
+
 
 async function getAllCommentsByPatientID(ID){
     try{
@@ -23,7 +25,7 @@ async function getAllCommentsByPatientID(ID){
         let comments = await pool.request()
             .input('input_parameter', sql.Int, ID)
             .query("SELECT * FROM Comments WHERE PATIENT_ID = @input_parameter");
-        return ResponseHandler(200, null, comments.recordsets, null)
+        return ResponseHandler(200, null, HelperFunctions.transformKeysToLowercase(comments.recordsets), null)
     } catch (error) {
         return ResponseHandler(500, 'Eroare server: ', null, error.message)
     }
@@ -40,9 +42,9 @@ async function addComment(comment) {
             VALUES (@PATIENT_ID, @COMMENT, @CREATED_AT)
         `;
         let result = await pool.request()
-            .input('PATIENT_ID', sql.Int, comment.PATIENT_ID)
-            .input('COMMENT', sql.NVarChar, comment.COMMENT)
-            .input('CREATED_AT', sql.DateTime, currentDate)
+            .input('patient_id', sql.Int, comment.patient_id)
+            .input('comment', sql.NVarChar, comment.comment)
+            .input('created_at', sql.DateTime, currentDate)
             .query(addCommentQuery);
         return ResponseHandler(200, 'Comentariul a fost adăugat cu succes.', null, null)
     } catch (error) {

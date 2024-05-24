@@ -10,6 +10,12 @@ const commentsRoutes = require('./Routes/CommentsRoutes');
 const appointmentsRoutes = require('./Routes/AppointmentsRoutes');
 const settingsRoutes = require('./Routes/SettingsRouters');
 const smsoRoutes = require('./Routes/SMSORoutes');
+const worksRoutes = require('./Routes/WorksRoutes');
+const diseasesRoutes = require('./Routes/DiseasesRoutes');
+const issuesRoutes = require('./Routes/MedicalIssuesRoutes');
+const fileUploadRoutes = require('./Routes/FileUploadRoutes');
+
+TZ = 'Europe/Bucharest'
 
 // Middleware pentru verificarea parolei
 const checkPassword = (request, response, next) => {
@@ -33,6 +39,10 @@ app.use('/api/Comments', commentsRoutes);
 app.use('/api/Appointments', appointmentsRoutes);
 app.use('/api/Settings', settingsRoutes);
 app.use('/api/SMSO', smsoRoutes);
+app.use('/api/Works', worksRoutes);
+app.use('/api/Diseases', diseasesRoutes);
+app.use('/api/MedicalIssues', issuesRoutes);
+app.use('/api', fileUploadRoutes)
 app.use('/api', loginRoutes);
 
 const port = process.env.PORT || 8080;

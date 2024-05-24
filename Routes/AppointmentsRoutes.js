@@ -49,4 +49,11 @@ router.route('/DeleteAppointment/:ID').delete((request, response) => {
     })
 });
 
+router.route('/GetLastID').get((request, response) => {
+    AppointmentsController.getLastAppointmentID().then(result => {
+        response.status(result.status)
+        response.json(result);
+    })
+});
+
 module.exports = router;

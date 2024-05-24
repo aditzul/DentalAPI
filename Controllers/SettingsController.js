@@ -16,7 +16,7 @@ async function getSMSOSettings(){
 async function getSMSSettings(){
     try{
         let pool = await sql.connect(config);
-        let smsoSettings = await pool.request().query('SELECT SMS_SEND_SMS, SMS_SEND_HOUR, SMS_SEND_DAYS FROM AppSettings');
+        let smsoSettings = await pool.request().query('SELECT SMS_SEND_SMS, SMS_SEND_HOUR, SMS_SEND_DAYS, SMS_TEMPLATE FROM AppSettings');
         return ResponseHandler(200, null, smsoSettings.recordsets, null)
 
     } catch (error) {

@@ -5,7 +5,7 @@ function transformKeysToLowercase(obj) {
             let lowercaseKey = key.toLowerCase();
             const value = obj[key];
 
-            if (key.toLowerCase() === 'created_at' || key.toLowerCase() === 'birth_date' ) {
+            if (key.toLowerCase() === 'created_at' || key.toLowerCase() === 'birth_date' || key.toLowerCase() === 'start' || key.toLowerCase() === 'end' ) {
                 newObj[lowercaseKey] = value;
             } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
                 newObj[lowercaseKey] = transformKeysToLowercase(value);

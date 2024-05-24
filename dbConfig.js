@@ -9,7 +9,7 @@ const config = {
         instancename: 'SQLEXPRESS',
         trustServerCertificate: true
     },
-    port: 54471
+    port: 55360 //SELECT * FROM [sys].[dm_tcp_listener_states]
 }
 
 module.exports = config;
