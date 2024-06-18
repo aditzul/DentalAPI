@@ -13,6 +13,7 @@ const smsoRoutes = require('./Routes/SMSORoutes');
 const worksRoutes = require('./Routes/WorksRoutes');
 const diseasesRoutes = require('./Routes/DiseasesRoutes');
 const issuesRoutes = require('./Routes/MedicalIssuesRoutes');
+const teethHistoryRoutes = require('./Routes/TeethHistoryRoutes')
 const fileUploadRoutes = require('./Routes/FileUploadRoutes');
 
 TZ = 'Europe/Bucharest'
@@ -42,6 +43,7 @@ app.use('/api/SMSO', smsoRoutes);
 app.use('/api/Works', worksRoutes);
 app.use('/api/Diseases', diseasesRoutes);
 app.use('/api/MedicalIssues', issuesRoutes);
+app.use('/api/TeethHistory', teethHistoryRoutes);
 app.use('/api', fileUploadRoutes)
 app.use('/api', loginRoutes);
 
