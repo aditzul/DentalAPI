@@ -56,7 +56,7 @@ async function uploadDocument(req, res) {
                 }
                 // Setează calea directorului pentru pacient
                 const patientFolder = JSON.parse(patientInfo).patient_folder;
-                const fileType = JSON.parse(patientInfo).fileType;
+                const fileType = JSON.parse(patientInfo).document_type;
                 const uploadPath = path.join(__dirname, '..', 'Uploads', patientFolder, fileType);
                 
                 // Crează directorul dacă nu există
@@ -80,6 +80,7 @@ async function uploadDocument(req, res) {
                     },
                     patient: patientInfo
                 });
+
             } catch (error) {
                 reject({ status: 500, message: 'Server error', error: error.message });
             }
@@ -91,6 +92,34 @@ async function uploadDocument(req, res) {
     });
 }
 
+async function getFilesList(req, res) {
+    try {
+        // Extrage informațiile pacientului din body
+        const patientInfo = req.body.patientInfo;
+                
+        // Setează calea directorului pentru pacient
+        const patientFolder = patientInfo.patient_folder;
+        const fileType = patientInfo.document_type;
+        const uploadPath = path.join(__dirname, '..', 'Uploads', patientFolder, fileType);
+
+        let filenames = fs.readdirSync(uploadPath); 
+
+        let result = filenames.map(file => {
+            return {
+                filename: file,
+                filepath: path.join(uploadPath, file)
+            };
+        }); 
+
+        console.log(result)
+  
+        return ResponseHandler(200, null, result, null)
+    } catch (error) {
+        return ResponseHandler(200, null, null, null)
+    }
+}
+
 module.exports = {
-    uploadDocument
+    uploadDocument : uploadDocument,
+    getFilesList : getFilesList,
 };

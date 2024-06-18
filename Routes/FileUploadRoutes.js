@@ -10,4 +10,12 @@ router.route('/UploadDocument').post((request, response) => {
         })
 });
 
+router.route('/GetFilesList').post((request, response) => {
+    FileUploadController.getFilesList(request, response)
+        .then(result => {
+            response.status(result.status);
+            response.json(result);
+        })
+});
+
 module.exports = router;
