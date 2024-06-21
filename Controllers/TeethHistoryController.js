@@ -32,19 +32,19 @@ async function getTeethHistoryByPatientID(patient_id) {
 async function addTeethHistory(body) {
     try {
         let currentDate = new Date().toISOString();
-        console.log(body)
+        body = body.details
         let pool = await sql.connect(config);
         let addQuery = `
-            INSERT INTO PatientsDentalWorks (PATIENT_ID, TOOTH_ID, DENTAL_WORK_ID, EXTRACTED, COMMENT, [DATE])
-            VALUES (@PATIENT_ID, @TOOTH_ID, @DENTAL_WORK_ID, @EXTRACTED, @COMMENT, @DATE)
+            INSERT INTO PatientsDentalWorks (PATIENT_ID, TOOTH_ID, DENTAL_WORK_ID, EXTRACTED, COMMENT, CREATED_AT)
+            VALUES (@PATIENT_ID, @TOOTH_ID, @DENTAL_WORK_ID, @EXTRACTED, @COMMENT, @CREATED_AT)
         `;
         let result = await pool.request()
-            .input('PATIENT_ID', sql.Int, body.patient_id)
-            .input('TOOTH_ID', sql.Int, body.tooth_id)
-            .input('DENTAL_WORK_ID', sql.Int, body.dental_work_id)
-            .input('EXTRACTED', sql.Int, body.extracted)
-            .input('COMMENT', sql.NVarChar, body.comment)
-            .input('DATE', sql.DateTime, currentDate)
+            .input('patient_id', sql.Int, body.patient_id)
+            .input('tooth_id', sql.Int, body.tooth_id)
+            .input('dental_work_id', sql.Int, body.dental_work_id)
+            .input('extracted', sql.Int, body.extracted)
+            .input('comment', sql.NVarChar, body.comment)
+            .input('created_at', sql.DateTime, currentDate)
             .query(addQuery);
         return ResponseHandler(200, 'Lucrarea a fost adăugată cu succes.', null, null)
     } catch (error) {

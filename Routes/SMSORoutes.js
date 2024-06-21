@@ -10,9 +10,8 @@ router.route('/SMS-Senders').get((request, response) => {
 });
 
 router.route('/SendSMS').post((request, response) => {
-    const { to, message } = request.body;
-    SMSOController.sendSMS(to, message).then(result => {
-        response.status(result.status) 
+    SMSOController.sendSMS(request.body).then(result => {
+        //response.status(result.status)
         response.json(result);
     })
 });

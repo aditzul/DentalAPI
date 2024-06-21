@@ -30,14 +30,14 @@ async function getSmsSendersWithApiKey() {
     }
 }
 
-async function sendSMS(to, message) {
+async function sendSMS(data) {
     try {
         const { senderID, apiKey } = await getApiKeyAndSenderId();
 
         const postData = {
-            to: to,
+            to: '+4' + data.to,
             sender: senderID,
-            body: message
+            body: data.body
         };
 
         const headers = {
@@ -45,7 +45,7 @@ async function sendSMS(to, message) {
         };
 
         const response = await axios.post('https://app.smso.ro/api/v1/send', postData, { headers });
-        return ResponseHandler(200, null, response.data, null)
+        return ResponseHandler(200, 'SMS trimis cu succces', null, null)
 
     } catch (error) {
         return ResponseHandler(500, 'Eroare server: ', null, error.message)

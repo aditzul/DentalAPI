@@ -55,8 +55,8 @@ async function addPatient(patient) {
 
         let pool = await sql.connect(config);
         let addPatientQuery = `
-            INSERT INTO Patients (FIRST_NAME, LAST_NAME, CNP, AGE, BIRTH_DATE, SEX, COUNTRY, STATE, CITY, ADDRESS, PHONE, EMAIL, PHISICAL_FILE, SECONDARY_CONTACT_NAME, SECONDARY_CONTACT_PHONE, MEDIC_ID, CREATED_AT, SEND_SMS)
-            VALUES (@FIRST_NAME, @LAST_NAME, @CNP, @AGE, @BIRTH_DATE, @SEX, @COUNTRY, @STATE, @CITY, @ADDRESS, @PHONE, @EMAIL, @PHISICAL_FILE, @SECONDARY_CONTACT_NAME, @SECONDARY_CONTACT_PHONE, @MEDIC_ID, @CREATED_AT, @SEND_SMS)
+            INSERT INTO Patients (FIRST_NAME, LAST_NAME, CNP, AGE, BIRTH_DATE, SEX, COUNTRY, STATE, CITY, ADDRESS, PHONE, EMAIL, PHISICAL_FILE, SECONDARY_CONTACT_NAME, SECONDARY_CONTACT_PHONE, MEDIC_ID, SEND_SMS)
+            VALUES (@FIRST_NAME, @LAST_NAME, @CNP, @AGE, @BIRTH_DATE, @SEX, @COUNTRY, @STATE, @CITY, @ADDRESS, @PHONE, @EMAIL, @PHISICAL_FILE, @SECONDARY_CONTACT_NAME, @SECONDARY_CONTACT_PHONE, @MEDIC_ID, @SEND_SMS)
         `;
         let result = await pool.request()
             .input('first_name', sql.NVarChar, patient.first_name)
@@ -75,7 +75,6 @@ async function addPatient(patient) {
             .input('secondary_contact_name', sql.NVarChar, patient.secondary_contact_name)
             .input('secondary_contact_phone', sql.NVarChar, patient.secondary_contact_phone)
             .input('medic_id', sql.Int, patient.medic_id)
-            .input('created_at', sql.DateTime, currentDate)
             .input('send_sms', sql.Int, 1)
             .query(addPatientQuery);
         return ResponseHandler(200, 'Pacientul a fost adăugat cu succes.', null, null)
@@ -185,6 +184,18 @@ function validateCNP(cnp) {
         return true;
     } else {
         return 'CNP-ul nu este valid.';
+    }
+}
+
+function validatePhoneNumberRO(phoneNumber) {
+    // Eliminăm spațiile albe din numărul de telefon
+    const cleanedNumber = phoneNumber.replace(/\s/g, '');
+
+    // Verificăm dacă numărul începe cu prefixul național 0 și are între 9 și 10 cifre
+    if (/^0[2-9][0-9]{8,9}$/.test(cleanedNumber)) {
+        return true; // Numărul de telefon este valid pentru România
+    } else {
+        return false; // Numărul de telefon nu este valid pentru România
     }
 }
 

@@ -39,7 +39,7 @@ cron.schedule('*/10 * * * * *', async () => {
     }
 
     if (sendSMS) {
-      console.log('SMS Service is turned ON')
+      console.log('Serviciul SMS este ACTIV')
       const currentDate = new Date();
       const futureDate = new Date(currentDate);
       futureDate.setDate(currentDate.getDate() + sendDays);
@@ -67,7 +67,7 @@ cron.schedule('*/10 * * * * *', async () => {
         console.log('Nu sunt programări peste', sendDays, 'zile.')
       }
     } else {
-      console.log('SMS Service is turned OFF')
+      console.log('Serviciul SMS este INACTIV')
     }
 
   } catch (error) {
