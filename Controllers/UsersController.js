@@ -19,7 +19,7 @@ async function getAllUsers(){
 async function getAllMedics(){
     try{
         let pool = await sql.connect(config);
-        let medics = await pool.request().query('SELECT * FROM Users WHERE Role = 1');
+        let medics = await pool.request().query('SELECT ID, FIRST_NAME, LAST_NAME FROM Users WHERE Role = 1');
         
         return ResponseHandler(200, null, HelperFunctions.transformKeysToLowercase(medics.recordsets[0]), null)
     } catch (error) {

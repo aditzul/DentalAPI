@@ -19,9 +19,6 @@ async function getAllPatientsByMedicID(ID){
         let patients = await pool.request()
             .input('input_parameter', sql.Int, ID)
             .query("SELECT * FROM Patients WHERE MEDIC_ID = @input_parameter");
-            if (!patients.recordsets || !patients.recordsets[0][0]?.ID) {
-                return ResponseHandler(404, 'Eroare: ', null, "Medicul cu ID '" + ID + "' nu există sau nu are nici un pacient asociat.")
-            }
         return ResponseHandler(200, null,  HelperFunctions.transformKeysToLowercase(patients.recordsets[0]), null)
     } catch (error) {
         return ResponseHandler(500, 'Eroare server: ', null, error.message)
@@ -47,9 +44,10 @@ async function addPatient(patient) {
     try {
         let currentDate = new Date().toISOString();
         currentDate = new Date(new Date(currentDate).getTime() + 3 * 60 * 60 * 1000).toISOString();
+        const cnpData = validateCNP(patient.cnp)
 
         // Calculăm vârsta pacientului folosind data curentă și data de naștere
-        const birthDate = new Date(patient.birth_date);
+        const birthDate = new Date(cnpData.birthDate);
         const currentDateObj = new Date();
         const age = currentDateObj.getFullYear() - birthDate.getFullYear();
 
@@ -63,8 +61,8 @@ async function addPatient(patient) {
             .input('last_name', sql.NVarChar, patient.last_name)
             .input('cnp', sql.VarChar(20), patient.cnp)
             .input('age', sql.Int, age)
-            .input('birth_date', sql.DateTime, patient.birth_date)
-            .input('sex', sql.NVarChar, patient.sex)
+            .input('birth_date', sql.DateTime, birthDate)
+            .input('sex', sql.NVarChar, cnpData.sex)
             .input('country', sql.NVarChar, patient.country)
             .input('state', sql.NVarChar, patient.state)
             .input('city', sql.NVarChar, patient.city)
@@ -89,39 +87,42 @@ async function addPatient(patient) {
 
 async function updatePatient(ID, updates) {
     try {
+        const cnpData = validateCNP(updates.cnp);
 
-        // Dacă birth_date este în updates, calculăm age
-        if (updates.birth_date) {
-            const birthDate = new Date(updates.birth_date);
-            const currentDateObj = new Date();
-            const age = currentDateObj.getFullYear() - birthDate.getFullYear();
+        // Calculăm vârsta pacientului folosind data curentă și data de naștere
+        const birthDate = new Date(cnpData.birthDate);
+        const currentDateObj = new Date();
+        const age = currentDateObj.getFullYear() - birthDate.getFullYear();
 
-            // Adăugăm age la updates
-            updates.age = age;
-        }
-
-        if(updates.cnp) {
-            console.log(validateCNP(updates.cnp))
-        }
+        updates.age = age;
+        updates.sex = cnpData.sex;
+        updates.birth_date = birthDate;
 
         let updateQuery = 'UPDATE Patients SET ';
         let queryParams = [];
+        let updateFields = [];
+
         Object.keys(updates).forEach((key, index) => {
             if (key === 'id') {
                 return; // Exclude ID from updates
             }
-            if (key === 'age') {}
-            updateQuery += `${key} = @param${index}`;
-            // Verificăm tipul de date al valorii și alegem tipul de parametru SQL corespunzător
-            let valueType = typeof updates[key] === 'number' ? sql.Int : sql.NVarChar;
-            queryParams.push({ name: `param${index}`, type: valueType, value: updates[key] });
+            updateFields.push(`${key} = @param${index}`);
 
-            if (index < Object.keys(updates).length - 1) {
-                updateQuery += ', ';
+            // Verificăm tipul de date al valorii și alegem tipul de parametru SQL corespunzător
+            let valueType;
+            if (typeof updates[key] === 'number') {
+                valueType = sql.Int;
+            } else if (updates[key] instanceof Date) {
+                valueType = sql.DateTime;
+            } else {
+                valueType = sql.NVarChar;
             }
+            queryParams.push({ name: `param${index}`, type: valueType, value: updates[key] });
         });
 
+        updateQuery += updateFields.join(', ');
         updateQuery += ' WHERE ID = @ID';
+
         queryParams.push({ name: 'ID', type: sql.Int, value: ID });
 
         let pool = await sql.connect(config);
@@ -132,15 +133,17 @@ async function updatePatient(ID, updates) {
 
         let result = await request.query(updateQuery);
 
-        return ResponseHandler(200, 'Pacientul a fost actualizat cu succes.', null, null)
+        return ResponseHandler(200, 'Pacientul a fost actualizat cu succes.', null, null);
     } catch (error) {
         if (error.message.includes("Violation of UNIQUE KEY constraint 'unique_CNP'")) {
-            return ResponseHandler(400, 'Eroare server', null, error.message)
+            return ResponseHandler(400, 'Eroare server', null, error.message);
         } else {
-            return ResponseHandler(500, 'Eroare server: ', null, error.message)
+            return ResponseHandler(500, 'Eroare server: ', null, error.message);
         }
     }
 }
+
+
 
 async function deletePatient(ID) {
     try {
@@ -163,7 +166,12 @@ async function deletePatient(ID) {
 function validateCNP(cnp) {
     // Verificăm dacă CNP-ul are exact 13 caractere și conține doar cifre
     if (cnp.length !== 13 || !/^\d+$/.test(cnp)) {
-        return 'CNP-ul trebuie să fie format din exact 13 caractere și să conțină doar cifre.';
+        return {
+            valid: false,
+            message: 'CNP-ul trebuie să fie format din exact 13 caractere și să conțină doar cifre.',
+            sex: null,
+            birthDate: null
+        };
     }
 
     const constanta = '279146358279';
@@ -180,11 +188,61 @@ function validateCNP(cnp) {
     const controlDigit = rest < 10 ? rest : 1;
 
     // Verificăm dacă cifra de control calculată este egală cu cea din CNP
-    if (controlDigit === parseInt(cnp[12], 10)) {
-        return true;
-    } else {
-        return 'CNP-ul nu este valid.';
+    if (controlDigit !== parseInt(cnp[12], 10)) {
+        return {
+            valid: false,
+            message: 'CNP-ul nu este valid.',
+            sex: null,
+            birthDate: null
+        };
     }
+
+    // Extragem sexul și data nașterii din CNP
+    const sexCode = parseInt(cnp[0], 10);
+    let year = parseInt(cnp.substring(1, 3), 10);
+    const month = parseInt(cnp.substring(3, 5), 10);
+    const day = parseInt(cnp.substring(5, 7), 10);
+    
+    // Determinăm sexul
+    let sex;
+    if (sexCode === 1 || sexCode === 3 || sexCode === 5 || sexCode === 7) {
+        sex = 'M';
+    } else if (sexCode === 2 || sexCode === 4 || sexCode === 6 || sexCode === 8) {
+        sex = 'F';
+    } else {
+        return {
+            valid: false,
+            message: 'CNP-ul nu este valid.',
+            sex: null,
+            birthDate: null
+        };
+    }
+
+    // Determinăm secolul și corectăm anul
+    if (sexCode === 1 || sexCode === 2) {
+        year += 1900;
+    } else if (sexCode === 3 || sexCode === 4) {
+        year += 1800;
+    } else if (sexCode === 5 || sexCode === 6) {
+        year += 2000;
+    } else {
+        return {
+            valid: false,
+            message: 'CNP-ul nu este valid.',
+            sex: null,
+            birthDate: null
+        };
+    }
+
+    // Creăm obiectul Date folosind Date.UTC pentru a evita problemele de fus orar
+    const birthDate = new Date(Date.UTC(year, month - 1, day));
+
+    return {
+        valid: true,
+        message: 'CNP-ul este valid.',
+        sex: sex,
+        birthDate: birthDate
+    };
 }
 
 function validatePhoneNumberRO(phoneNumber) {
