@@ -161,52 +161,27 @@ async function getFilesList(req, res) {
     }
 }
 
+async function deleteDocument(document) {
+    const { file_id, file_path } = document.body;
+    try {
+        console.log(document.body)
+        let pool = await sql.connect(config);
+        let result = await pool.request()
+            .input('file_id', sql.Int, file_id)
+            .query("DELETE FROM PatientsDocuments WHERE ID = @file_id");
 
-// async function getFilesList(req, res) {
-//     try {
-//         // Verificăm dacă avem userId în parametrii cererii
-//         const patientFolder = req.params.ID;
+        const parentDir = path.resolve(__dirname, '../');
+        const filePathToDelete = path.join(parentDir, 'Uploads', file_path);
+        fs.unlinkSync(filePathToDelete);
 
-//         // Setăm căile directoarelor pentru fișierele utilizatorului
-//         const documentePath = path.join(__dirname, '..', 'Uploads', patientFolder, 'Documente');
-//         const imagisticaPath = path.join(__dirname, '..', 'Uploads', patientFolder, 'Imagistica');
-
-//         let documenteList = [];
-//         let imagisticaList = [];
-
-//         // Verificăm dacă calea pentru documente există și adăugăm fișierele în documenteList
-//         if (fs.existsSync(documentePath)) {
-//             documenteList = fs.readdirSync(documentePath).map(file => ({
-//                 filename: file,
-//                 filepath: path.join(documentePath, file)
-//             }));
-//         }
-
-//         // Verificăm dacă calea pentru imagistică există și adăugăm fișierele în imagisticaList
-//         if (fs.existsSync(imagisticaPath)) {
-//             imagisticaList = fs.readdirSync(imagisticaPath).map(file => ({
-//                 filename: file,
-//                 filepath: path.join(imagisticaPath, file)
-//             }));
-//         }
-
-//         // Construim un obiect de rezultat cu listele de documente și imagistică
-//         let result = {
-//             documenteList: documenteList,
-//             imagisticaList: imagisticaList
-//         };
-
-//         //return ResponseHandler(200, null, HelperFunctions.transformKeysToLowercase(result), null)
-//         // Returnăm obiectul cu liste de fișiere într-un răspuns de succes
-//         return res.status(200).json(result);
-//     } catch (error) {
-//         // În caz de eroare, returnăm un răspuns de eroare
-//         console.error('Eroare la aducerea listei de fișiere:', error);
-//         return res.status(500).json({ message: 'Eroare server la aducerea listei de fișiere.' });
-//     }
-// }
+        return ResponseHandler(200, 'Documentul a fost șters cu succes.', null, null)
+    } catch (error) {
+        return ResponseHandler(500, 'Eroare server: ', null, error.message)
+    }
+}
 
 module.exports = {
     uploadDocument : uploadDocument,
     getFilesList : getFilesList,
+    deleteDocument : deleteDocument,
 };

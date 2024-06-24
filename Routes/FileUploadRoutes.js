@@ -14,12 +14,12 @@ router.route('/GetFilesList/:ID').get((request, response) => {
     FileUploadController.getFilesList(request, response)
 });
 
-// router.route('/GetFilesList/:ID').get((request, response) => {
-//     FileUploadController.getFilesList(request, response)
-//     .then(result => {
-//         response.status(result.status);
-//         response.json(result);
-//     })
-// });
+router.route('/DeleteDocument').post((request, response) => {
+    FileUploadController.deleteDocument(request, response)
+        .then(result => {
+            response.status(result.status);
+            response.json(result);
+        })
+});
 
 module.exports = router;
